@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Build application",
+        "type": "shell",
+        "command": "cmake --preset=default && cmake --build build",
+        "group": "build",
+        "problemMatcher": ["$gcc"]
+      },
+      {
+        "label": "Flash application",
+        "type": "shell",
+        "command": "st-flash --format ihex write build/F767_MQTT_Station.hex && st-flash reset"
+      }
+    ]
+  }

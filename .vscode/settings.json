@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "stm32f7xx_hal.h": "c",
+        "error.h": "c",
+        "clock.h": "c",
+        "stm32f7xx_hal_def.h": "c",
+        "stm32f7xx.h": "c",
+        "stm32_hal_legacy.h": "c",
+        "stddef.h": "c",
+        "stm32f767xx.h": "c",
+        "cmsis_os.h": "c",
+        "stm32f7xx_hal_conf.h": "c"
+    }
+}
