@@ -15,46 +15,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PROJECT_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set(MAIN_TARGET ${PROJECT_NAME})
 
-set(CPU_PARAMETERS
-    -mthumb
-    -mcpu=cortex-m7
-    -mfpu=fpv5-d16
-    -mfloat-abi=hard
-)
-
 add_executable(${MAIN_TARGET})
-
-target_compile_options(${MAIN_TARGET} PUBLIC
-    ${CPU_PARAMETERS}
-    -g
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wno-unused-parameter
-    $<$<CONFIG:Debug>:-Og>
-)
-
-target_link_options(${MAIN_TARGET} PUBLIC
-    -T${CMAKE_CURRENT_SOURCE_DIR}/board_config/STM32F767ZITX_FLASH.ld
-    ${CPU_PARAMETERS}
-    -Wl,-Map=${MAIN_TARGET}.map
-    --specs=nosys.specs
-    -u _printf_float                # STDIO float formatting support
-    -Wl,--start-group
-    -lc
-    -lm
-    -lstdc++
-    -lsupc++
-    -Wl,--end-group
-    -Wl,--print-memory-usage
-)
 
 target_compile_definitions(${MAIN_TARGET} PUBLIC
     FREERTOS
     USE_HAL_DRIVER
     STM32F767xx
 )
-
 
 include(cmake/sdk.cmake)
 

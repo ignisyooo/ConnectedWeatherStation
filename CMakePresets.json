@@ -10,7 +10,13 @@
             "name": "default",
             "generator": "Unix Makefiles",
             "binaryDir": "build",   
-            "toolchainFile": "${sourceDir}/cmake/toolchain-arm-none-eabi.cmake"
+            "toolchainFile": "${sourceDir}/cmake/toolchain-arm-none-eabi.cmake",
+            "cacheVariables": {
+                "CFG_SELECTED_MCU": "cortex-m7",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CFG_LINKER_FILE": "${sourceDir}/board_config/STM32F767ZITX_FLASH.ld"
+
+            }
         }
     ]
 }

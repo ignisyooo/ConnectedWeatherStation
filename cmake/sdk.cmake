@@ -27,13 +27,6 @@ set(SDK_INCLUDES
 file(GLOB HAL_SOURCES CONFIGURE_DEPENDS ${HAL_PATH}/Src/*.c)
 
 add_library(sdk STATIC)
-target_compile_options(sdk PUBLIC
-    -mcpu=cortex-m7            # Określa procesor Cortex-M7
-    -mthumb                    # Używa instrukcji Thumb (konieczne dla Cortex-M7)
-    -mfloat-abi=hard           # Używa sprzętowego wsparcia dla FPU (opcjonalnie)
-    -mfpu=fpv5-d16             # Używa FPU dla zmiennoprzecinkowych obliczeń (opcjonalnie)
-)
-
 target_include_directories(sdk PUBLIC ${SDK_INCLUDES})
 target_sources(sdk PRIVATE ${HAL_SOURCES})
 target_compile_definitions(sdk PRIVATE
