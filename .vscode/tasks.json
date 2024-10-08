@@ -11,7 +11,7 @@
       {
         "label": "Flash application",
         "type": "shell",
-        "command": "st-flash --format ihex write build/F767_MQTT_Station.hex && st-flash reset"
+        "command": "st-flash --format ihex write build/ConnectedWeatherStation.hex && st-flash reset"
       }
     ]
   }
