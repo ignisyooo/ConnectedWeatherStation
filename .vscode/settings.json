@@ -9,6 +9,17 @@
         "stddef.h": "c",
         "stm32f767xx.h": "c",
         "cmsis_os.h": "c",
-        "stm32f7xx_hal_conf.h": "c"
-    }
+        "stm32f7xx_hal_conf.h": "c",
+        "gpio.h": "c",
+        "stm32f7xx_it.h": "c",
+        "usart.h": "c",
+        "opt.h": "c",
+        "string.h": "c",
+        "stdio.h": "c",
+        "semaphore.h": "c",
+        "stdarg.h": "c",
+        "logger.h": "c",
+        "semphr.h": "c"
+    },
+    "cortex-debug.variableUseNaturalFormat": true
 }

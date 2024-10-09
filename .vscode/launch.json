@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cortex Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/build/ConnectedWeatherStation.elf",
+            "armToolchainPath": "/opt/gcc-arm-none-eabi-10.3-2021.10/bin",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "device": "STM32F767",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f7x.cfg"
+            ],
+            "svdFile": "${workspaceFolder}/STM32F7x7.svd"
+        }    
+    ]
+}

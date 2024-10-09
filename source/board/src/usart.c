@@ -53,6 +53,16 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+
+    // // Enable uart Tx (emprty line, trnasfer complete )
+    // // Enable UART3 interrupts
+    // /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
+
+    __HAL_UART_ENABLE_IT( uartHandle, UART_IT_TC );
+
   }
 }
 
@@ -69,5 +79,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     PD9     ------> USART3_RX
     */
     HAL_GPIO_DeInit(GPIOD, STLK_RX_Pin|STLK_TX_Pin);
+
+    HAL_NVIC_DisableIRQ(USART3_IRQn);
   }
 }
+

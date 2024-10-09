@@ -4,6 +4,8 @@
 #include "usart.h"
 #include "cmsis_os.h"
 
+#include "logger.h"
+
 
 static void StartDefaultTask(void* argument);
 
@@ -15,6 +17,10 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   osKernelInitialize();
+
+  logger_init(&huart3);
+
+  LOG_INFO("Initialization completed!");
 
   const osThreadAttr_t attributes = {
     .name = "defaultTask",
@@ -40,8 +46,9 @@ static void StartDefaultTask(void *argument)
 
   while (1)
   {
+    LOG_INFO("Hello from default task\n");
     HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-    osDelay(500);
+    osDelay(1000);
   }
 }
 
@@ -56,4 +63,12 @@ void vApplicationMallocFailedHook( void )
 {
   // logger_sendMessage("Memory allocation failed\r\n");
   while(1){}
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if(USART3 == huart->Instance)
+  {
+    logger_txCompleteCallback();
+  }
 }
