@@ -19,7 +19,8 @@
         "semaphore.h": "c",
         "stdarg.h": "c",
         "logger.h": "c",
-        "semphr.h": "c"
+        "semphr.h": "c",
+        "cmath": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true
 }

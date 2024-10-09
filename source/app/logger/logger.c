@@ -12,7 +12,8 @@
 /*********************************************************************************
 * PRIVATE TYPES DECLARATION
 ***********************************************************************************/
-typedef struct {
+typedef struct 
+{
     UART_HandleTypeDef *uartHandle;
     SemaphoreHandle_t uartSemaphore;
     tLogLevel currentLogLevel;
@@ -23,14 +24,11 @@ typedef struct {
 * PRIVATE VARIABLES DECLERATION
 ***********************************************************************************/
 static tLogger m_logger_log;
-static char m_logger_outputBuffer[LOG_OUTPUT_BUFFER_SIZE];
-
 
 /*********************************************************************************
 * PRIVATE FUNTCTION DECLERATION
 ***********************************************************************************/
 static void sendToUart(const char *msg, size_t msgSize);
-
 
 /*********************************************************************************
 * PUBLIC FUNTCTION DEFINTIONS
@@ -41,6 +39,11 @@ void logger_init(UART_HandleTypeDef *huart)
     m_logger_log.currentLogLevel = LOG_LEVEL_INFO;
 
     m_logger_log.uartSemaphore = xSemaphoreCreateBinary();
+
+    if( NULL != m_logger_log.uartSemaphore )
+    {
+        xSemaphoreGive( m_logger_log.uartSemaphore );
+    }
 }
 
 void logger_txCompleteCallback(void)
@@ -61,12 +64,19 @@ void logger_print(tLogLevel level, const char *file, int line, const char *forma
     if (level <= m_logger_log.currentLogLevel)
     {
         va_list args;
-        size_t offset = snprintf(m_logger_outputBuffer, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] ", file, line);
-        size_t msgSize = vsnprintf(m_logger_outputBuffer + offset, LOG_OUTPUT_BUFFER_SIZE - offset, format, args);
+        char logMsg[LOG_OUTPUT_BUFFER_SIZE] = { 0 };
+        size_t offset = snprintf(logMsg, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] ", file, line);
+        size_t msgSize = vsnprintf(logMsg + offset, LOG_OUTPUT_BUFFER_SIZE - offset, format, args);
         msgSize += offset;
         va_end(args);
 
-        sendToUart( m_logger_outputBuffer, msgSize );
+        if( ( '\n' != logMsg[msgSize - 1]) && (msgSize < LOG_OUTPUT_BUFFER_SIZE - 1) )
+        {
+            logMsg[msgSize] = '\n'; 
+            msgSize++;
+        }
+
+        sendToUart( logMsg, msgSize );
     }
 }
 
@@ -75,8 +85,7 @@ void logger_print(tLogLevel level, const char *file, int line, const char *forma
 ***********************************************************************************/
 static void sendToUart(const char *msg, size_t msgSize)
 {
-    if(HAL_OK == HAL_UART_Transmit_IT(m_logger_log.uartHandle, (uint8_t *)msg, msgSize))
-    {
-        xSemaphoreTake(m_logger_log.uartSemaphore, portMAX_DELAY);
-    }
+    xSemaphoreTake(m_logger_log.uartSemaphore, portMAX_DELAY);
+    HAL_UART_Transmit(m_logger_log.uartHandle, (uint8_t *)msg, msgSize, 1000);
+    xSemaphoreGive(m_logger_log.uartSemaphore);
 }

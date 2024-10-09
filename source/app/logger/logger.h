@@ -8,10 +8,11 @@
 
 #include <string.h>
 
-typedef enum {
+typedef enum
+{
+    LOG_LEVEL_ERROR,
     LOG_LEVEL_INFO,
     LOG_LEVEL_DEBUG,
-    LOG_LEVEL_ERROR
 } tLogLevel;
 
 void logger_init(UART_HandleTypeDef *huart);

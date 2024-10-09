@@ -20,7 +20,7 @@ int main(void)
 
   logger_init(&huart3);
 
-  LOG_INFO("Initialization completed!");e
+  LOG_INFO("Initialization completed!");
 
   const osThreadAttr_t attributes = {
     .name = "defaultTask",
@@ -43,10 +43,9 @@ int main(void)
 
 static void StartDefaultTask(void *argument)
 {
-
   while (1)
   {
-    LOG_INFO("Hello from default task\n");
+    LOG_INFO("Hello from default task");
     HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
     osDelay(1000);
   }
