@@ -20,7 +20,7 @@ int main(void)
 
   logger_init(&huart3);
 
-  LOG_INFO("Initialization completed!");
+  LOG_INFO("Initialization completed!");e
 
   const osThreadAttr_t attributes = {
     .name = "defaultTask",
