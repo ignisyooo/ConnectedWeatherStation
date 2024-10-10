@@ -12,7 +12,7 @@ set(CPU_PARAMETERS "-mthumb -mcpu=${CFG_SELECTED_MCU} -mfpu=auto -mfloat-abi=har
 set(CMAKE_C_FLAGS_INIT "${CPU_PARAMETERS}" CACHE INTERNAL "")
 set(CMAKE_CXX_FLAGS_INIT "${CPU_PARAMETERS}" CACHE INTERNAL "")
 set(CMAKE_ASM_FLAGS_INIT "${CPU_PARAMETERS}" CACHE INTERNAL "")
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-T${CFG_LINKER_FILE} ${CPU_PARAMETERS} -Wl,-Map=${MAIN_TARGET}.map --specs=nosys.specs -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group -Wl,--print-memory-usage" CACHE INTERNAL "")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-T${CFG_LINKER_FILE} ${CPU_PARAMETERS} -Wl,-Map=memory.map --specs=nosys.specs -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group -Wl,--print-memory-usage" CACHE INTERNAL "")
 
 set(COMPILE_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter")
 

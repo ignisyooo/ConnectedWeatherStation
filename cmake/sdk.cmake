@@ -25,7 +25,7 @@ file(GLOB HAL_SOURCES CONFIGURE_DEPENDS ${HAL_PATH}/Src/*.c)
 add_library(sdk STATIC)
 target_include_directories(sdk PUBLIC ${SDK_INCLUDES})
 target_sources(sdk PRIVATE ${HAL_SOURCES})
-target_compile_definitions(sdk PRIVATE
+target_compile_definitions(sdk PUBLIC
     USE_HAL_DRIVER
     STM32F767xx
 )

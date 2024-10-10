@@ -14,7 +14,8 @@
                 "interface/stlink.cfg",
                 "target/stm32f7x.cfg"
             ],
-            "svdFile": "${workspaceFolder}/STM32F7x7.svd"
+            "svdFile": "${workspaceFolder}/STM32F7x7.svd",
+            "runToMain": true
         }    
     ]
 }

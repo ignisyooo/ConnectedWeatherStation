@@ -28,4 +28,4 @@ target_compile_definitions(freertos PRIVATE
     FREERTOS
 )
 
-target_link_libraries(freertos PRIVATE sdk)
+target_link_libraries(freertos PUBLIC sdk)

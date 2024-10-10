@@ -20,7 +20,9 @@
         "stdarg.h": "c",
         "logger.h": "c",
         "semphr.h": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "ethernetif.h": "c",
+        "sio.h": "c"
     },
-    "cortex-debug.variableUseNaturalFormat": true
+    "cortex-debug.variableUseNaturalFormat": false
 }

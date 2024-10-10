@@ -22,7 +22,7 @@
 #include "usart.h"
 #include "stm32f7xx_it.h"
 
-// extern ETH_HandleTypeDef heth;
+extern ETH_HandleTypeDef heth;
 extern TIM_HandleTypeDef htim6;
 extern UART_HandleTypeDef huart3;
 
@@ -84,11 +84,10 @@ void TIM6_DAC_IRQHandler(void)
 
 }
 
-// void ETH_IRQHandler(void)
-// {
-
-//   HAL_ETH_IRQHandler(&heth);
-// }
+void ETH_IRQHandler(void)
+{
+  HAL_ETH_IRQHandler(&heth);
+}
 
 
 void USART3_IRQHandler(void)

@@ -43,6 +43,9 @@ int main(void)
 
 static void StartDefaultTask(void *argument)
 {
+
+  MX_LWIP_Init();
+
   while (1)
   {
     LOG_INFO("Hello from default task");

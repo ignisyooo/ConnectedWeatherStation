@@ -64,6 +64,7 @@ void logger_print(tLogLevel level, const char *file, int line, const char *forma
     if (level <= m_logger_log.currentLogLevel)
     {
         va_list args;
+        va_start(args, format);
         char logMsg[LOG_OUTPUT_BUFFER_SIZE] = { 0 };
         size_t offset = snprintf(logMsg, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] ", file, line);
         size_t msgSize = vsnprintf(logMsg + offset, LOG_OUTPUT_BUFFER_SIZE - offset, format, args);
