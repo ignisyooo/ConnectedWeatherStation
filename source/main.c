@@ -56,12 +56,12 @@ static void StartDefaultTask(void *argument)
 /* FREERTOS HOOKS */
 void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName )
 {
-  // logger_sendMessage("Stack overflow detected on task %s\r\n", pcTaskName);
+  LOG_ERROR("Stack overflow detected on task %s\r\n", pcTaskName);
   while(1){}
 }
 
 void vApplicationMallocFailedHook( void )
 {
-  // logger_sendMessage("Memory allocation failed\r\n");
+  LOG_ERROR("Memory allocation failed\r\n");
   while(1){}
 }

@@ -122,9 +122,9 @@ static void dhcpUpdateCallacbk(struct netif *netif)
 {
   if (netif_is_up(netif))
   {
-    if (0 !=netif->ip_addr.addr)
+    if (!ip4_addr_isany(netif_ip4_addr(netif)))
     {
-      LOG_INFO("DHCP succeeded, IP address assigned: %s\n", ip4addr_ntoa(&netif->ip_addr));
+      LOG_INFO("DHCP succeeded, IPv4 address assigned: %s\n", ip4addr_ntoa(&netif->ip_addr));
       m_network_dhcpAddressAssigned = true;
     }
   }

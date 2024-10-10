@@ -24,7 +24,9 @@
         "ethernetif.h": "c",
         "sio.h": "c",
         "init.h": "c",
-        "network.h": "c"
+        "network.h": "c",
+        "netif.h": "c",
+        "dhcp6.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }
