@@ -46,14 +46,6 @@ void logger_init(UART_HandleTypeDef *huart)
     }
 }
 
-void logger_txCompleteCallback(void)
-{
-    if( NULL != m_logger_log.uartHandle )
-    {
-        xSemaphoreGiveFromISR(m_logger_log.uartSemaphore, NULL);
-    }
-}
-
 void logger_setLogLevel(tLogLevel level)
 {
     m_logger_log.currentLogLevel = level;

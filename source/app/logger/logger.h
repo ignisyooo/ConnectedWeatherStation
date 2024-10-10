@@ -17,7 +17,6 @@ typedef enum
 
 void logger_init(UART_HandleTypeDef *huart);
 void logger_setLogLevel(tLogLevel level);
-void logger_txCompleteCallback(void);
 void logger_print(tLogLevel level, const char *file, int line, const char *format, ...);
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)

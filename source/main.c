@@ -3,6 +3,7 @@
 #include "gpio.h"
 #include "usart.h"
 #include "cmsis_os.h"
+#include "network.h"
 
 #include "logger.h"
 
@@ -43,12 +44,10 @@ int main(void)
 
 static void StartDefaultTask(void *argument)
 {
-
-  MX_LWIP_Init();
+  network_init();
 
   while (1)
   {
-    LOG_INFO("Hello from default task");
     HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
     osDelay(1000);
   }
@@ -65,12 +64,4 @@ void vApplicationMallocFailedHook( void )
 {
   // logger_sendMessage("Memory allocation failed\r\n");
   while(1){}
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-  if(USART3 == huart->Instance)
-  {
-    logger_txCompleteCallback();
-  }
 }

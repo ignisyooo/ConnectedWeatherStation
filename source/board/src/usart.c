@@ -69,8 +69,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     PD9     ------> USART3_RX
     */
     HAL_GPIO_DeInit(GPIOD, STLK_RX_Pin|STLK_TX_Pin);
-
-    HAL_NVIC_DisableIRQ(USART3_IRQn);
   }
 }
 

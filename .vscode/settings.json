@@ -22,7 +22,9 @@
         "semphr.h": "c",
         "cmath": "c",
         "ethernetif.h": "c",
-        "sio.h": "c"
+        "sio.h": "c",
+        "init.h": "c",
+        "network.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }
