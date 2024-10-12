@@ -1,9 +1,9 @@
 #include "error.h"
 
-void Error_Handler(void)
+void Error_Handler( void )
 {
-  __disable_irq();
-  while (1)
-  {
-  }
+    __disable_irq();
+    while( 1 )
+    {
+    }
 }

@@ -26,7 +26,13 @@
         "init.h": "c",
         "network.h": "c",
         "netif.h": "c",
-        "dhcp6.h": "c"
+        "dhcp6.h": "c",
+        "mqtt.h": "c",
+        "stdbool.h": "c",
+        "netfwd": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }
