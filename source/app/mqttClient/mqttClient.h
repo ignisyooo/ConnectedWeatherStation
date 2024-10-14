@@ -4,7 +4,7 @@
 
 typedef enum
 {
-    ULR,
+    HOSTNAME,
     IPV4_ADDRESS,
 } tMqttClient_brokerAddressType;
 
@@ -22,8 +22,21 @@ typedef struct
     const char* data;
 } tMqttClient_dataPacket;
 
-void mqttClient_init( void );
 
+typedef enum
+{
+    CONNECTION_ACCEPTED,
+    CONNECTION_REFUSED,
+    CONNECTION_BROKER_NOT_AVAILABLE,
+    CONNECTION_TIMEOUTED,
+    CONNECTION_ERROR,
+} tMqttClient_connectionResult;
+
+typedef void (*tMqttClient_userCallback)(const char* topic, const char* payload, size_t payloadLength);
+typedef void (*tMqttClient_disconnectCallback)(void);
+
+void mqttClient_init( void );
 void mqttClient_clientCreate( const char* clientId, const tMqttClient_brokerInfo* brokerInfo, const char* subTopic );
-void mqttClient_connect( void );
+tMqttClient_connectionResult mqttClient_connect( void );
 void mqttClient_sendMessage( const char* topic, const char* msg );
+void mqttClient_registerCallbacks( tMqttClient_userCallback userCallback, tMqttClient_disconnectCallback disconnectCallback );

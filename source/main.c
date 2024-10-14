@@ -7,7 +7,11 @@
 #include "network.h"
 #include "usart.h"
 
-static void StartDefaultTask( void *argument );
+static void StartDefaultTask( void* argument );
+static void userMqttDisconnectCallback( void );
+static void userMqttDataCallback( const char* topic, const char* payload, size_t payloadLength );
+
+static bool connected = false;
 
 int main( void )
 {
@@ -39,10 +43,12 @@ int main( void )
     }
 }
 
-static void StartDefaultTask( void *argument )
+static void StartDefaultTask( void* argument )
 {
     network_init();
     mqttClient_init();
+
+    // logger_setLogLevel(LOG_LEVEL_DEBUG);
 
     const tMqttClient_brokerInfo info = {
         .addresType = IPV4_ADDRESS,
@@ -50,25 +56,45 @@ static void StartDefaultTask( void *argument )
         .brokerPort = 1883
     };
 
-    mqttClient_clientCreate( "st-client", &info, NULL );
-    // mqttClient_connect();
-    bool connected = false;
+    const char* mqttClientId = "st-client";
+    const char* mqttTopicName = "st/command";
+
+    mqttClient_clientCreate( mqttClientId, &info, mqttTopicName );
+    mqttClient_registerCallbacks( userMqttDataCallback, userMqttDisconnectCallback );
 
     while( 1 )
     {
         if( !connected && network_isIpv4AddressAssigned() )
         {
-            mqttClient_connect();
-            connected = true;
+            if( CONNECTION_ACCEPTED == mqttClient_connect() )
+            {
+                connected = true;
+            }
         }
         HAL_GPIO_TogglePin( LED_BLUE_GPIO_Port, LED_BLUE_Pin );
         osDelay( 1000 );
-        mqttClient_sendMessage("test", "Hello from st");
+
+        if( connected )
+        {
+            mqttClient_sendMessage( "test", "Hello from st" );
+        }
     }
 }
 
+static void userMqttDisconnectCallback( void )
+{
+    LOG_INFO( "Client disconnected from broker" );
+
+    connected = false;
+}
+
+static void userMqttDataCallback( const char* topic, const char* payload, size_t payloadLength )
+{
+    LOG_INFO( "Received on topic: %s, payload: %s", topic, payload );
+}
+
 /* FREERTOS HOOKS */
-void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char* pcTaskName )
 {
     LOG_ERROR( "Stack overflow detected on task %s\r\n", pcTaskName );
     while( 1 )

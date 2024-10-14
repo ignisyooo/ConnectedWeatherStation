@@ -6,12 +6,12 @@
 
 #include "cmsis_os.h"
 
-/*********************************************************************************
+/************************************************************************************
  * PRIVATE MACROS
  ***********************************************************************************/
-#define LOG_OUTPUT_BUFFER_SIZE 200U
+#define LOG_OUTPUT_BUFFER_SIZE ( 400U )
 
-/*********************************************************************************
+/************************************************************************************
  * PRIVATE TYPES DECLARATION
  ***********************************************************************************/
 typedef struct
@@ -21,17 +21,24 @@ typedef struct
     tLogLevel currentLogLevel;
 } tLogger;
 
-/*********************************************************************************
+/************************************************************************************
  * PRIVATE VARIABLES DECLERATION
  ***********************************************************************************/
 static tLogger m_logger_log;
 
-/*********************************************************************************
+static const char *m_logger_logLevelName[] = {
+    [LOG_LEVEL_ERROR] = "ERROR",
+    [LOG_LEVEL_WARNING] = "WARNING",
+    [LOG_LEVEL_INFO] = "INFO",
+    [LOG_LEVEL_DEBUG] = "DEBUG",
+};
+
+/************************************************************************************
  * PRIVATE FUNTCTION DECLERATION
  ***********************************************************************************/
 static void sendToUart( const char *msg, size_t msgSize );
 
-/*********************************************************************************
+/************************************************************************************
  * PUBLIC FUNTCTION DEFINTIONS
  ***********************************************************************************/
 void logger_init( UART_HandleTypeDef *huart )
@@ -54,7 +61,7 @@ void logger_print( tLogLevel level, const char *file, int line, const char *form
         va_list args;
         va_start( args, format );
         char logMsg[LOG_OUTPUT_BUFFER_SIZE] = { 0 };
-        size_t offset = snprintf( logMsg, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] ", file, line );
+        size_t offset = snprintf( logMsg, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] [%s] ", file, line, m_logger_logLevelName[level] );
         size_t msgSize = vsnprintf( logMsg + offset, LOG_OUTPUT_BUFFER_SIZE - offset, format, args );
         msgSize += offset;
         va_end( args );
@@ -69,7 +76,7 @@ void logger_print( tLogLevel level, const char *file, int line, const char *form
     }
 }
 
-/*********************************************************************************
+/************************************************************************************
  * PRIVATE FUNTCTION DEFINITIONS
  ***********************************************************************************/
 static void sendToUart( const char *msg, size_t msgSize )
