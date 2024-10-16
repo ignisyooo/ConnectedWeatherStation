@@ -2,17 +2,11 @@
 
 #include "lwip/ip_addr.h"
 
-typedef enum
-{
-    HOSTNAME,
-    IPV4_ADDRESS,
-} tMqttClient_brokerAddressType;
 
 typedef struct
 {
     const char* brokerAddres;
     uint16_t brokerPort;
-    tMqttClient_brokerAddressType addresType;
 } tMqttClient_brokerInfo;
 
 typedef struct

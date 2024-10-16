@@ -1,5 +1,6 @@
 #include "clock.h"
 #include "cmsis_os.h"
+#include "dns_resolver.h"
 #include "error.h"
 #include "gpio.h"
 #include "logger.h"
@@ -29,7 +30,7 @@ int main( void )
     const osThreadAttr_t attributes = {
         .name = "defaultTask",
         .stack_size = 1024,
-        .priority = (osPriority_t)osPriorityBelowNormal,
+        .priority = (osPriority_t)osPriorityHigh,
     };
 
     osThreadNew( StartDefaultTask, NULL, &attributes );
@@ -46,13 +47,13 @@ int main( void )
 static void StartDefaultTask( void* argument )
 {
     network_init();
+    dnsResolver_init();
     mqttClient_init();
 
     // logger_setLogLevel(LOG_LEVEL_DEBUG);
 
     const tMqttClient_brokerInfo info = {
-        .addresType = IPV4_ADDRESS,
-        .brokerAddres = "192.168.0.69",
+        .brokerAddres = "broker.hivemq.com",
         .brokerPort = 1883
     };
 
@@ -68,6 +69,7 @@ static void StartDefaultTask( void* argument )
         {
             if( CONNECTION_ACCEPTED == mqttClient_connect() )
             {
+                LOG_INFO("Client connected!");
                 connected = true;
             }
         }

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "cmsis_os.h"
+#include "dns_resolver.h"
 #include "logger.h"
 #include "lwip/apps/mqtt.h"
 
@@ -23,7 +24,7 @@ typedef struct
 {
     const char* clientId;
     int16_t brokerPort;
-    ip_addr_t brokerIp;
+    const char* brokerAddress;
     tMqttClient_userCallback userCallback;
     tMqttClient_disconnectCallback disconnectCallback;
 } tMqttClient_config;
@@ -98,15 +99,7 @@ void mqttClient_clientCreate( const char* clientId, const tMqttClient_brokerInfo
     {
         m_mqttClient_clientCfg.clientId = clientId;
         m_mqttClient_clientCfg.brokerPort = brokerInfo->brokerPort;
-
-        if( IPV4_ADDRESS == brokerInfo->addresType )
-        {
-            ipaddr_aton( brokerInfo->brokerAddres, &m_mqttClient_clientCfg.brokerIp );
-        }
-        else
-        {
-            LOG_INFO( "DNS not implemented!" );
-        }
+        m_mqttClient_clientCfg.brokerAddress = brokerInfo->brokerAddres;
 
         strncpy( m_mqttClient_subTopic, subTopic, MQTT_TOPIC_LENGTH );
 
@@ -115,8 +108,8 @@ void mqttClient_clientCreate( const char* clientId, const tMqttClient_brokerInfo
 
         LOG_INFO( "Created new mqtt client" );
         LOG_INFO( "mqtt client id: %s", m_mqttClient_clientCfg.clientId );
-        LOG_INFO( "mqtt broker address %s", ip4addr_ntoa( &m_mqttClient_clientCfg.brokerIp ) );
-        LOG_INFO( "mqtt broker port %d", m_mqttClient_clientCfg.brokerPort );
+        LOG_INFO( "mqtt broker address: %s", m_mqttClient_clientCfg.brokerAddress );
+        LOG_INFO( "mqtt broker port: %d", m_mqttClient_clientCfg.brokerPort );
         LOG_INFO( "mqtt subscribe topic: %s", m_mqttClient_subTopic );
     }
 }
@@ -125,18 +118,19 @@ tMqttClient_connectionResult mqttClient_connect( void )
 {
     tMqttClient_connectionResult result = CONNECTION_ERROR;
     m_mqttClient_connectionInProgress = true;
+    ip_addr_t ipaddr;
 
-    if( ERR_OK == mqtt_client_connect( m_mqttClient_client, &m_mqttClient_clientCfg.brokerIp,
-                                       m_mqttClient_clientCfg.brokerPort, connectionStatusCallback, NULL, &m_mqttClient_connectionInfo ) )
+    if( dnsResolver_resolveHostname( m_mqttClient_clientCfg.brokerAddress, &ipaddr ) )
     {
-        if( osOK == osSemaphoreAcquire( m_mqttClient_syncSemaphore, osWaitForever ) )
+        LOG_INFO( "Connecting to %s", ip4addr_ntoa( (const ip4_addr_t*)&ipaddr ) );
+        if( ERR_OK == mqtt_client_connect( m_mqttClient_client, &ipaddr, m_mqttClient_clientCfg.brokerPort,
+                                           connectionStatusCallback, NULL, &m_mqttClient_connectionInfo ) )
         {
-            subscribeTopic( m_mqttClient_client, m_mqttClient_subTopic );
+            if( ( osOK == osSemaphoreAcquire( m_mqttClient_syncSemaphore, osWaitForever ) ) && ( CONNECTION_ACCEPTED == m_mqttClient_connectionStatus ) )
+            {
+                subscribeTopic( m_mqttClient_client, m_mqttClient_subTopic );
+            }
             result = m_mqttClient_connectionStatus;
-        }
-        else
-        {
-            result = CONNECTION_TIMEOUTED;
         }
     }
 

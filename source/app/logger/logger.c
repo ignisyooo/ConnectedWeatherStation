@@ -10,6 +10,7 @@
  * PRIVATE MACROS
  ***********************************************************************************/
 #define LOG_OUTPUT_BUFFER_SIZE ( 400U )
+#define LOG_QUEUE_SIZE         ( 20u )
 
 /************************************************************************************
  * PRIVATE TYPES DECLARATION
@@ -17,14 +18,21 @@
 typedef struct
 {
     UART_HandleTypeDef *uartHandle;
-    osSemaphoreId_t uartSemaphore;
+    osMessageQueueId_t logQueue;
     tLogLevel currentLogLevel;
 } tLogger;
+
+typedef struct
+{
+    char msg[LOG_OUTPUT_BUFFER_SIZE];
+    size_t msgSize;
+} tLogMessage;
 
 /************************************************************************************
  * PRIVATE VARIABLES DECLERATION
  ***********************************************************************************/
 static tLogger m_logger_log;
+static osThreadId_t m_logger_taskHandler;
 
 static const char *m_logger_logLevelName[] = {
     [LOG_LEVEL_ERROR] = "ERROR",
@@ -36,7 +44,7 @@ static const char *m_logger_logLevelName[] = {
 /************************************************************************************
  * PRIVATE FUNTCTION DECLERATION
  ***********************************************************************************/
-static void sendToUart( const char *msg, size_t msgSize );
+static void loggerTask( void *argument );
 
 /************************************************************************************
  * PUBLIC FUNTCTION DEFINTIONS
@@ -46,7 +54,14 @@ void logger_init( UART_HandleTypeDef *huart )
     m_logger_log.uartHandle = huart;
     m_logger_log.currentLogLevel = LOG_LEVEL_INFO;
 
-    m_logger_log.uartSemaphore = osSemaphoreNew( 1, 1, NULL );
+    m_logger_log.logQueue = osMessageQueueNew( LOG_QUEUE_SIZE, sizeof( tLogMessage ), NULL );
+
+    const osThreadAttr_t attr = {
+        .name = "loggerTask",
+        .priority = (osPriority_t)osPriorityNormal,
+        .stack_size = 1024
+    };
+    m_logger_taskHandler = osThreadNew( loggerTask, NULL, &attr );
 }
 
 void logger_setLogLevel( tLogLevel level )
@@ -60,28 +75,35 @@ void logger_print( tLogLevel level, const char *file, int line, const char *form
     {
         va_list args;
         va_start( args, format );
-        char logMsg[LOG_OUTPUT_BUFFER_SIZE] = { 0 };
-        size_t offset = snprintf( logMsg, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] [%s] ", file, line, m_logger_logLevelName[level] );
-        size_t msgSize = vsnprintf( logMsg + offset, LOG_OUTPUT_BUFFER_SIZE - offset, format, args );
+        tLogMessage logMessage = { 0 };
+        size_t offset = snprintf( logMessage.msg, LOG_OUTPUT_BUFFER_SIZE, "[%s:%d] [%s] ", file, line, m_logger_logLevelName[level] );
+        size_t msgSize = vsnprintf( logMessage.msg + offset, LOG_OUTPUT_BUFFER_SIZE - offset, format, args );
         msgSize += offset;
         va_end( args );
 
-        if( ( '\n' != logMsg[msgSize - 1] ) && ( msgSize < LOG_OUTPUT_BUFFER_SIZE - 1 ) )
+        if( ( '\n' != logMessage.msg[msgSize - 1] ) && ( msgSize < LOG_OUTPUT_BUFFER_SIZE - 1 ) )
         {
-            logMsg[msgSize] = '\n';
+            logMessage.msg[msgSize] = '\n';
             msgSize++;
         }
 
-        sendToUart( logMsg, msgSize );
+        logMessage.msgSize = msgSize;
+
+        osMessageQueuePut( m_logger_log.logQueue, &logMessage, 0, 0 );
     }
 }
 
 /************************************************************************************
  * PRIVATE FUNTCTION DEFINITIONS
  ***********************************************************************************/
-static void sendToUart( const char *msg, size_t msgSize )
+static void loggerTask( void *argument )
 {
-    osSemaphoreAcquire( m_logger_log.uartSemaphore, osWaitForever );
-    HAL_UART_Transmit( m_logger_log.uartHandle, (uint8_t *)msg, msgSize, 1000 );
-    osSemaphoreRelease( m_logger_log.uartSemaphore );
+    tLogMessage logMessage;
+    while( 1 )
+    {
+        if( osOK == osMessageQueueGet( m_logger_log.logQueue, &logMessage, NULL, osWaitForever ) )
+        {
+            HAL_UART_Transmit( m_logger_log.uartHandle, (uint8_t *)logMessage.msg, logMessage.msgSize, 1000 );
+        }
+    }
 }
