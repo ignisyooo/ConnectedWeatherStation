@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "mqttClient.h"
 #include "network.h"
+#include "rtc.h"
 #include "usart.h"
 
 static void StartDefaultTask( void* argument );
@@ -21,6 +22,7 @@ int main( void )
     SystemClock_Config();
     MX_GPIO_Init();
     MX_USART3_UART_Init();
+    RTC_Init();
     osKernelInitialize();
 
     logger_init( &huart3 );
@@ -63,23 +65,31 @@ static void StartDefaultTask( void* argument )
     mqttClient_clientCreate( mqttClientId, &info, mqttTopicName );
     mqttClient_registerCallbacks( userMqttDataCallback, userMqttDisconnectCallback );
 
+    RTC_TimeTypeDef time = { 0 };
+    RTC_DateTypeDef date = { 0 };
+
     while( 1 )
     {
         if( !connected && network_isIpv4AddressAssigned() )
         {
             if( CONNECTION_ACCEPTED == mqttClient_connect() )
             {
-                LOG_INFO("Client connected!");
+                LOG_INFO( "Client connected!" );
                 connected = true;
             }
         }
         HAL_GPIO_TogglePin( LED_BLUE_GPIO_Port, LED_BLUE_Pin );
         osDelay( 1000 );
 
+        HAL_RTC_GetTime( &hrtc, &time, RTC_FORMAT_BIN );
+        HAL_RTC_GetDate( &hrtc, &date, RTC_FORMAT_BIN );
+
         if( connected )
         {
             mqttClient_sendMessage( "test", "Hello from st" );
         }
+
+        LOG_INFO( "Current time: %02d:%02d:%02d", time.Hours, time.Minutes, time.Seconds );
     }
 }
 
