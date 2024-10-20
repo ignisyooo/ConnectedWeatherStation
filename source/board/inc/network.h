@@ -1,19 +1,20 @@
 #ifndef __mx_lwip_H
 #define __mx_lwip_H
 #ifdef __cplusplus
- extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdbool.h>
 
-#include "lwip/opt.h"
+#include "ethernetif.h"
+#include "lwip/dhcp.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
-#include "netif/etharp.h"
-#include "lwip/dhcp.h"
 #include "lwip/netif.h"
+#include "lwip/opt.h"
 #include "lwip/timeouts.h"
-#include "ethernetif.h"
+#include "netif/etharp.h"
 
 #if WITH_RTOS
 #include "lwip/tcpip.h"
@@ -22,11 +23,12 @@
 extern ETH_HandleTypeDef heth;
 extern struct netif gnetif;
 
-void network_init(void);
+typedef void ( *tNetwork_statusCallback )( void );
 
-
-bool network_isIpv4AddressAssigned(void);
-bool network_getIpv4Address(ip4_addr_t *pAddr);
+void network_init( tNetwork_statusCallback dhcp_callback );
+bool network_isLinkUp( void );
+void network_startDhcp( void );
+bool network_getIpv4Address( ip4_addr_t *pAddr );
 
 #ifdef __cplusplus
 }

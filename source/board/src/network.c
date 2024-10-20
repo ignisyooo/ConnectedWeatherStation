@@ -22,11 +22,7 @@ struct netif gnetif;
  * PRIVATE VARIABLES DECLERATION
  ***********************************************************************************/
 
-/* Variables Initialization */
-static ip4_addr_t ipaddr;
-static ip4_addr_t netmask;
-static ip4_addr_t gw;
-static bool m_network_dhcpAddressAssigned = false;
+static tNetwork_statusCallback dhcp_callback_fn;
 
 /* Ethernet link thread Argument */
 static struct link_str link_arg;
@@ -40,15 +36,16 @@ static void dhcpUpdateCallacbk( struct netif *netif );
 /*********************************************************************************
  * PUBLIC FUNTCTION DEFINTIONS
  ***********************************************************************************/
-void network_init( void )
+void network_init( tNetwork_statusCallback dhcp_callback )
 {
+    dhcp_callback_fn = dhcp_callback;
     /* Initilialize the LwIP stack with RTOS */
     tcpip_init( NULL, NULL );
 
     /* IP addresses initialization with DHCP (IPv4) */
-    ipaddr.addr = 0;
-    netmask.addr = 0;
-    gw.addr = 0;
+    ip_addr_t ipaddr = { 0 };
+    ip_addr_t netmask = { 0 };
+    ip_addr_t gw = { 0 };
 
     /* add the network interface (IPv4/IPv6) with RTOS */
     netif_add( &gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input );
@@ -78,35 +75,32 @@ void network_init( void )
     link_arg.netif = &gnetif;
     link_arg.semaphore = Netif_LinkSemaphore;
     /* Create the Ethernet link handler thread */
-    /* USER CODE BEGIN OS_THREAD_NEW_CMSIS_RTOS_V2 */
+
     osThreadAttr_t attributes;
     memset( &attributes, 0x0, sizeof( osThreadAttr_t ) );
     attributes.name = "LinkThr";
     attributes.stack_size = INTERFACE_THREAD_STACK_SIZE;
     attributes.priority = osPriorityBelowNormal;
     osThreadNew( ethernetif_set_link, &link_arg, &attributes );
-    /* USER CODE END OS_THREAD_NEW_CMSIS_RTOS_V2 */
-
-    /* Start DHCP negotiation for a network interface (IPv4) */
-    dhcp_start( &gnetif );
-
-    /* USER CODE BEGIN 3 */
-
-    /* USER CODE END 3 */
 }
 
-bool network_isIpv4AddressAssigned( void )
+void network_startDhcp( void )
 {
-    return m_network_dhcpAddressAssigned;
+    dhcp_start( &gnetif );
+}
+
+bool network_isLinkUp( void )
+{
+    return netif_is_link_up( &gnetif );
 }
 
 bool network_getIpv4Address( ip4_addr_t *pAddr )
 {
     bool retVal = false;
 
-    if( m_network_dhcpAddressAssigned && ( NULL != pAddr ) )
+    if( dhcp_supplied_address( &gnetif ) && ( NULL != pAddr ) )
     {
-        memcpy( pAddr, &ipaddr, sizeof( ip4_addr_t ) );
+        memcpy( pAddr, &gnetif.ip_addr, sizeof( ip4_addr_t ) );
         retVal = true;
     }
 
@@ -118,12 +112,12 @@ bool network_getIpv4Address( ip4_addr_t *pAddr )
  ***********************************************************************************/
 static void dhcpUpdateCallacbk( struct netif *netif )
 {
-    if( netif_is_up( netif ) )
+    if( netif_is_up( netif ) && dhcp_supplied_address( netif ) )
     {
-        if( !ip4_addr_isany( netif_ip4_addr( netif ) ) )
+        // If DHCP has finished assigning an address, call user callback
+        if( dhcp_callback_fn )
         {
-            LOG_INFO( "DHCP succeeded, IPv4 address assigned: %s\n", ip4addr_ntoa( &netif->ip_addr ) );
-            m_network_dhcpAddressAssigned = true;
+            dhcp_callback_fn();
         }
     }
 }

@@ -1,0 +1,6 @@
+add_subdirectory(logger)
+add_subdirectory(mqttClient)
+add_subdirectory(dns)
+add_subdirectory(http)
+add_subdirectory(networkMgr)
+add_subdirectory(timeSync)

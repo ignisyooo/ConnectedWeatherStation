@@ -40,7 +40,10 @@
         "dns_resolver.h": "c",
         "err.h": "c",
         "errno.h": "c",
-        "httpclient.h": "c"
+        "httpclient.h": "c",
+        "httpsessionmgr.h": "c",
+        "mqttclient.h": "c",
+        "rtc.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

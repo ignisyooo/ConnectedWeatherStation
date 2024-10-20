@@ -67,7 +67,7 @@ static err_t tcpReceiveCallback( void *arg, struct tcp_pcb *tpcb, struct pbuf *p
  ***********************************************************************************/
 static tHttpSessionMgr_session m_httpSessionMgr_session;
 
-static tHttpSessionMgr_stateHandler m_httpSessionMgr_stateMachine[] = {
+static const tHttpSessionMgr_stateHandler m_httpSessionMgr_stateMachine[] = {
     [DISCONNECTED_WAIT_FOR_NEW_SESSION] = handleWaitForRequestState,
     [CONNECTIING] = handleConnectingState,
     [WAIT_FOR_CONNECTION] = handleWaitForConnectionState,
@@ -271,7 +271,7 @@ void handleSendRequestState( void )
         if( ERR_OK == err )
         {
             tcp_output( m_httpSessionMgr_session.pcb );
-            LOG_INFO( "A GET request was sent to %s", client->host );
+            LOG_INFO( "A %s request was sent to %s", m_httpSessionMgr_requestTypes[client->requestType], client->host );
             m_httpSessionMgr_session.state = CONNECTED_WAIT_FOR_RESPONSE;
         }
         else
