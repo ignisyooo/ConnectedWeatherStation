@@ -9,7 +9,7 @@
 /************************************************************************************
  * PRIVATE MACROS
  ***********************************************************************************/
-#define LOG_OUTPUT_BUFFER_SIZE ( 400U )
+#define LOG_OUTPUT_BUFFER_SIZE ( 1024 )
 #define LOG_QUEUE_SIZE         ( 20u )
 
 /************************************************************************************
@@ -59,7 +59,7 @@ void logger_init( UART_HandleTypeDef *huart )
     const osThreadAttr_t attr = {
         .name = "loggerTask",
         .priority = (osPriority_t)osPriorityNormal,
-        .stack_size = 1024
+        .stack_size = 2048
     };
     m_logger_taskHandler = osThreadNew( loggerTask, NULL, &attr );
 }

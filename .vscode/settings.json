@@ -34,7 +34,13 @@
         "string": "c",
         "string_view": "c",
         "ip_addr.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "sockets.h": "c",
+        "dns.h": "c",
+        "dns_resolver.h": "c",
+        "err.h": "c",
+        "errno.h": "c",
+        "httpclient.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

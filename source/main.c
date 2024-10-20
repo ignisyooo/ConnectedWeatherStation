@@ -3,6 +3,8 @@
 #include "dns_resolver.h"
 #include "error.h"
 #include "gpio.h"
+#include "httpClient.h"
+#include "httpSessionMgr.h"
 #include "logger.h"
 #include "mqttClient.h"
 #include "network.h"
@@ -12,6 +14,8 @@
 static void StartDefaultTask( void* argument );
 static void userMqttDisconnectCallback( void );
 static void userMqttDataCallback( const char* topic, const char* payload, size_t payloadLength );
+static void httpResponseCallback( void );
+static void httpErrorCallback( uint32_t errorCode );
 
 static bool connected = false;
 
@@ -31,7 +35,7 @@ int main( void )
 
     const osThreadAttr_t attributes = {
         .name = "defaultTask",
-        .stack_size = 1024,
+        .stack_size = 10024,
         .priority = (osPriority_t)osPriorityHigh,
     };
 
@@ -51,8 +55,9 @@ static void StartDefaultTask( void* argument )
     network_init();
     dnsResolver_init();
     mqttClient_init();
+    httpSessionMgr_init();
 
-    // logger_setLogLevel(LOG_LEVEL_DEBUG);
+    logger_setLogLevel( LOG_LEVEL_DEBUG );
 
     const tMqttClient_brokerInfo info = {
         .brokerAddres = "broker.hivemq.com",
@@ -68,6 +73,15 @@ static void StartDefaultTask( void* argument )
     RTC_TimeTypeDef time = { 0 };
     RTC_DateTypeDef date = { 0 };
 
+    const char* timeServerUrl = "http://worldclockapi.com/api/json/cet/now";
+
+    tHttpClient_client* client = httpClient_createNewHttpClient( httpResponseCallback, httpErrorCallback );
+
+    if( NULL != client )
+    {
+        httpClient_configureRequest( client, timeServerUrl, 80, GET );
+    }
+
     while( 1 )
     {
         if( !connected && network_isIpv4AddressAssigned() )
@@ -76,8 +90,10 @@ static void StartDefaultTask( void* argument )
             {
                 LOG_INFO( "Client connected!" );
                 connected = true;
+                httpSessionMgr_startNewSession( client );
             }
         }
+
         HAL_GPIO_TogglePin( LED_BLUE_GPIO_Port, LED_BLUE_Pin );
         osDelay( 1000 );
 
@@ -103,6 +119,16 @@ static void userMqttDisconnectCallback( void )
 static void userMqttDataCallback( const char* topic, const char* payload, size_t payloadLength )
 {
     LOG_INFO( "Received on topic: %s, payload: %s", topic, payload );
+}
+
+static void httpResponseCallback( void )
+{
+    LOG_INFO( "httpResponseCallback received!" );
+}
+
+static void httpErrorCallback( uint32_t erroCode )
+{
+    LOG_INFO( "httpErrorCallback received!. Error code: %u", erroCode );
 }
 
 /* FREERTOS HOOKS */

@@ -11,7 +11,7 @@
 /***********************************************************************************
  * PRIVATE MACROS DEFINTIONS
  ***********************************************************************************/
-#define DNS_QUERY_TIMEOUT ( 1000u )
+#define DNS_QUERY_TIMEOUT ( 5000u )
 
 /************************************************************************************
  * PRIVATE VARIABLES DECLERATION
@@ -66,6 +66,7 @@ bool dnsResolver_resolveHostname( const char *hostname, ip_addr_t *out_ipaddr )
             // If the semaphore was successfully acquired, check the resolved IP
             if( !ip_addr_isany( &resolved_addr ) )
             {
+                LOG_INFO("IP address for %s: %s\n", hostname, ip4addr_ntoa((const ip4_addr_t *)&resolved_addr));
                 ip_addr_copy( *out_ipaddr, resolved_addr );
                 success = true;
             }
@@ -80,7 +81,7 @@ bool dnsResolver_resolveHostname( const char *hostname, ip_addr_t *out_ipaddr )
  ***********************************************************************************/
 void dnsFoundCllback( const char *name, const ip_addr_t *ipaddr, void *callback_arg )
 {
-    if( NULL == ipaddr )
+    if( NULL != ipaddr )
     {
         ip_addr_copy( resolved_addr, *ipaddr );
     }
