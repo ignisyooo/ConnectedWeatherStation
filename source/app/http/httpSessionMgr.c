@@ -16,7 +16,7 @@
 #define HTTP_SESION_QUEUE_SIZE ( 5u )
 
 #define HTTP_CONNECTION_TIMEOUT_MS ( 5000u )
-#define HTTP_RECEIVE_TIMEOUT_MS    ( 10000u )
+#define HTTP_RECEIVE_TIMEOUT_MS    ( 20000u )
 
 /************************************************************************************
  * PRIVATE TYPES DECLARATION
@@ -110,6 +110,12 @@ void httpSessionMgr_init( void )
 
 void httpSessionMgr_startNewSession( tHttpClient_client *client )
 {
+    client->bytesReceived = 0;
+    client->headerReceived = false;
+
+    memset( client->requestBuffer, 0, HTTP_REQUEST_BUFFER_SIZE );
+    memset( client->responseBuffer, 0, HTTP_RESPONSE_BUFFER_SIZE );
+
     if( ( m_httpSessionMgr_session.isInitalized ) && ( NULL != client ) &&
         ( client->isInitalized ) && ( NOT_SPECIFIED != client->requestType ) )
     {
@@ -143,6 +149,7 @@ static err_t tcpReceiveCallback( void *arg, struct tcp_pcb *tpcb, struct pbuf *p
     if( p == NULL )
     {
         client->responseBuffer[total_len] = '\0';
+        client->bytesReceived = total_len;
         total_len = 0;
         tcp_close( tpcb );
         osSemaphoreRelease( m_httpSessionMgr_session.receiveSemaphore );
@@ -294,7 +301,9 @@ static void handleWaitForResponse( void )
         tHttpClient_client *client = m_httpSessionMgr_session.client;
         LOG_DEBUG( "Final response received:\n%s\n", client->responseBuffer );
         // TODO: header parsing
-        client->responseCallback();
+        char *data = client->responseBuffer;
+        size_t dataSize = client->bytesReceived;
+        client->responseCallback( data, dataSize );
         tcp_close( m_httpSessionMgr_session.pcb );
         m_httpSessionMgr_session.isConnected = false;
         m_httpSessionMgr_session.state = DISCONNECTED_WAIT_FOR_NEW_SESSION;

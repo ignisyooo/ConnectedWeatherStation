@@ -43,7 +43,9 @@
         "httpclient.h": "c",
         "httpsessionmgr.h": "c",
         "mqttclient.h": "c",
-        "rtc.h": "c"
+        "rtc.h": "c",
+        "cjson.h": "c",
+        "task.h": "c"
     },
-    "cortex-debug.variableUseNaturalFormat": false
+    "cortex-debug.variableUseNaturalFormat": true
 }

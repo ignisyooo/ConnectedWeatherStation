@@ -27,7 +27,7 @@ typedef enum
     HTTP_CLIENT_REQUEST_TYPE( REQUEST_TYPE_ENUM )
 } tHttpClient_requestType;
 
-typedef void ( *tHttpClient_responeCallback )( void );
+typedef void ( *tHttpClient_responeCallback )( const char* data, size_t dataSize );
 typedef void ( *tHttpClient_errorCallback )( uint32_t errorCode );
 
 typedef struct

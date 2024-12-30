@@ -26,10 +26,11 @@ target_compile_definitions(${MAIN_TARGET} PUBLIC
 include(cmake/sdk.cmake)
 include(cmake/freertos.cmake)
 include(cmake/lwip.cmake)
+include(cmake/cjson.cmake)
 
 add_subdirectory(source)
 
-target_link_libraries(${MAIN_TARGET} PUBLIC sdk freertos lwip)
+target_link_libraries(${MAIN_TARGET} PUBLIC sdk freertos lwip cjson)
 
 add_custom_command(TARGET ${MAIN_TARGET}
     POST_BUILD
