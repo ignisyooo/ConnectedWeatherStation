@@ -149,7 +149,7 @@ static void timeSyncTask( void *pvParameters )
             {
                 // Wait for HTTP response or timeout
                 vTaskDelay( TIMEZONE_REQUEST_TIMEOUT );
-                if( m_timeSync_httpRetryCount == 0 )
+                if( ( m_timeSync_httpRetryCount < TIMEZONE_MAX_HTTP_RETRIES ) && ( TIME_SYNC_WAIT_FOR_TIMEZONE_RESPONSE == m_timeSync_state ) )
                 {  // No response or error
                     m_timeSync_httpRetryCount++;
                     m_timeSync_state = TIME_SYNC_GET_TIMEZONE;  // Retry the request
@@ -204,6 +204,8 @@ static void timeZoneHttpResponseCallback( const char *data, size_t dataSize )
     // Parse the received JSON data
     if( parseTimeZoneInfo( data, dataSize ) )
     {
+        // Free httpClient
+        httpClient_deleteClient( &m_timeSync_timeZoneHttpClient );
         // Successfully parsed the timezone info, proceed to next state
         m_timeSync_state = TIME_SYNC_GET_NTP_TIME;
     }
@@ -243,6 +245,8 @@ static bool parseTimeZoneInfo( const char *data, size_t dataSize )
     cJSON *timezone = cJSON_GetObjectItemCaseSensitive( json, "timezone" );
     cJSON *country = cJSON_GetObjectItemCaseSensitive( json, "country" );
     cJSON *city = cJSON_GetObjectItemCaseSensitive( json, "city" );
+    cJSON *latitude = cJSON_GetObjectItemCaseSensitive( json, "lat" );
+    cJSON *longitude = cJSON_GetObjectItemCaseSensitive( json, "lon" );
 
     // Check if the necessary fields exist in the JSON
     if( cJSON_IsString( timezone ) && timezone->valuestring != NULL )
@@ -278,10 +282,34 @@ static bool parseTimeZoneInfo( const char *data, size_t dataSize )
         return false;  // Return false if "city" is missing or invalid
     }
 
+    if( cJSON_IsNumber( latitude ) && latitude->valuedouble != 0 )
+    {
+        snprintf( m_timeSync_localizationInfo.latitude, sizeof( m_timeSync_localizationInfo.latitude ) - 1, "%0.2f", latitude->valuedouble );
+    }
+    else
+    {
+        LOG_ERROR( "Latitude information is missing or invalid\n" );
+        cJSON_Delete( json );
+        return false;  // Return false if "latitude" is missing or invalid
+    }
+
+    if( cJSON_IsNumber( longitude ) && longitude->valuedouble != 0 )
+    {
+        snprintf( m_timeSync_localizationInfo.longitude, sizeof( m_timeSync_localizationInfo.longitude ) - 1, "%0.2f", longitude->valuedouble );
+    }
+    else
+    {
+        LOG_ERROR( "Longitude information is missing or invalid\n" );
+        cJSON_Delete( json );
+        return false;  // Return false if "longitude" is missing or invalid
+    }
+
     // Successfully parsed the timezone information
     LOG_INFO( "Timezone: %s\n", m_timeSync_localizationInfo.timezone );
     LOG_INFO( "Country: %s\n", m_timeSync_localizationInfo.country );
     LOG_INFO( "City: %s\n", m_timeSync_localizationInfo.city );
+    LOG_INFO( "Latitude: %s\n", m_timeSync_localizationInfo.latitude );
+    LOG_INFO( "Longitude: %s\n", m_timeSync_localizationInfo.longitude );
 
     // Clean up cJSON object
     cJSON_Delete( json );
@@ -385,7 +413,7 @@ static int32_t getTimezoneOffset( const char *timezoneName )
     return 0;
 }
 
-void syncRtcWithTime( uint32_t ntpTimestamp )
+static void syncRtcWithTime( uint32_t ntpTimestamp )
 {
     struct tm timeinfo;
     uint32_t localTime = ntpTimestamp + getTimezoneOffset( m_timeSync_localizationInfo.timezone );

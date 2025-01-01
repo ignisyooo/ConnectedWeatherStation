@@ -60,6 +60,15 @@ void httpClient_configureRequest( tHttpClient_client *client, const char *url, u
     }
 }
 
+void httpClient_deleteClient( tHttpClient_client** client )
+{
+    if( NULL != client )
+    {
+        vPortFree(*client);
+        *client = NULL;
+    }
+}
+
 /************************************************************************************
  * PRIVATE FUNTCTION DEFINITIONS
  ***********************************************************************************/

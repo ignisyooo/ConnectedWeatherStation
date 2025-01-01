@@ -63,22 +63,21 @@ static void StartDefaultTask( void* argument )
     const char* mqttClientId = "st-client";
     const char* mqttTopicName = "st/command";
 
-    mqttClient_clientCreate( mqttClientId, &info, mqttTopicName );
-    mqttClient_registerCallbacks( userMqttDataCallback, userMqttDisconnectCallback );
-
     RTC_TimeTypeDef time = { 0 };
     RTC_DateTypeDef date = { 0 };
 
     while( 1 )
     {
-        if( !connected && networkMgr_isReady() )
-        {
-            if( CONNECTION_ACCEPTED == mqttClient_connect() )
-            {
-                LOG_INFO( "Client connected!" );
-                connected = true;
-            }
-        }
+        // if( !connected && networkMgr_isReady() )
+        // {
+        //     mqttClient_clientCreate( mqttClientId, &info, mqttTopicName );
+        //     mqttClient_registerCallbacks( userMqttDataCallback, userMqttDisconnectCallback );
+        //     if( CONNECTION_ACCEPTED == mqttClient_connect() )
+        //     {
+        //         LOG_INFO( "Client connected!" );
+        //         connected = true;
+        //     }
+        // }
 
         HAL_GPIO_TogglePin( LED_BLUE_GPIO_Port, LED_BLUE_Pin );
         osDelay( 1000 );
@@ -86,10 +85,10 @@ static void StartDefaultTask( void* argument )
         HAL_RTC_GetTime( &hrtc, &time, RTC_FORMAT_BIN );
         HAL_RTC_GetDate( &hrtc, &date, RTC_FORMAT_BIN );
 
-        if( connected )
-        {
-            mqttClient_sendMessage( "test", "Hello from st" );
-        }
+        // if( connected )
+        // {
+        //     // mqttClient_sendMessage( "test", "Hello from st" );
+        // }
 
         LOG_INFO( "Current time: %02d:%02d:%02d", time.Hours, time.Minutes, time.Seconds );
     }

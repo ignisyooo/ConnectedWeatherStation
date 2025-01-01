@@ -48,5 +48,6 @@ typedef struct
 
 tHttpClient_client *httpClient_createNewHttpClient( tHttpClient_responeCallback responseCallback, tHttpClient_errorCallback errorCallback );
 void httpClient_configureRequest( tHttpClient_client *client, const char *url, uint16_t port, tHttpClient_requestType type );
+void httpClient_deleteClient( tHttpClient_client** client );
 
 #endif /* _HTTP_CLIENT_H_ */
