@@ -117,6 +117,8 @@ void networkMgrTask( void *args )
                 if( !network_isLinkUp() )
                 {
                     // If the link is lost, we return to the initial state
+                    network_stopDhcp();
+                    m_networkMgr_dhcpDone = false;
                     m_networkMgr_state = NET_WAIT_FOR_LINK;
                 }
                 osDelay( 1000 );

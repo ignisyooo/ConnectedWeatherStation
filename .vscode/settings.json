@@ -45,7 +45,11 @@
         "mqttclient.h": "c",
         "rtc.h": "c",
         "cjson.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "spi.h": "c",
+        "ili9341.h": "c",
+        "lvgl.h": "c",
+        "displaycontroller.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true
 }

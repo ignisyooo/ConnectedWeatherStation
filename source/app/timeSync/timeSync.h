@@ -11,4 +11,6 @@ typedef struct {
 
 void timeSync_init( void );
 
+const tTimeSync_localizationInfo* timeSync_getLocalizationInfo( void );
+
 #endif /* _TIME_SYNC_H_ */

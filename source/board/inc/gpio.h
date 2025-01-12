@@ -11,6 +11,12 @@
 #define STLK_RX_GPIO_Port GPIOD
 #define STLK_TX_Pin GPIO_PIN_9
 #define STLK_TX_GPIO_Port GPIOD
+#define SPI1_CS_Pin GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
+#define DC_Pin GPIO_PIN_12
+#define DC_GPIO_Port GPIOF
+#define RESET_Pin GPIO_PIN_15
+#define RESET_GPIO_Port GPIOD
 
 void MX_GPIO_Init(void);
 

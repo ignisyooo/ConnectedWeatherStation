@@ -25,6 +25,8 @@
 extern ETH_HandleTypeDef heth;
 extern TIM_HandleTypeDef htim6;
 extern UART_HandleTypeDef huart3;
+extern DMA_HandleTypeDef hdma_spi1_tx;
+extern SPI_HandleTypeDef hspi1;
 
 
 void NMI_Handler(void)
@@ -93,5 +95,15 @@ void ETH_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   HAL_UART_IRQHandler(&huart3);
+}
+
+void SPI1_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(&hspi1);
+}
+
+void DMA2_Stream3_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_spi1_tx);
 }
 

@@ -1,3 +1,6 @@
 [submodule "external/cJSON"]
 	path = external/cJSON
 	url = https://github.com/DaveGamble/cJSON.git
+[submodule "external/lvgl/lvgl"]
+	path = external/lvgl/lvgl
+	url = https://github.com/lvgl/lvgl.git

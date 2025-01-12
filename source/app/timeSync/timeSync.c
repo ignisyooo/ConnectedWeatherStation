@@ -92,6 +92,7 @@ static const tTimeZoneInfo m_timeSync_timezones[] = {
 
 // TODO: Handle DST time
 
+static bool m_timeSync_initalized = false;
 static tTimeSync_state m_timeSync_state = TIME_SYNC_INIT;
 static tTimeSync_serverType m_timeSync_serverType = PRIMARY_TIME_SERVER;
 static tHttpClient_client *m_timeSync_timeZoneHttpClient = NULL;
@@ -105,7 +106,16 @@ static tTimeSync_localizationInfo m_timeSync_localizationInfo;
 // Initialize the time sync task
 void timeSync_init( void )
 {
-    xTaskCreate( timeSyncTask, "TimeSync", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 1, NULL );
+    if( !m_timeSync_initalized )
+    {
+        m_timeSync_initalized = true;
+        xTaskCreate( timeSyncTask, "TimeSync", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 1, NULL );
+    }
+}
+
+const tTimeSync_localizationInfo* timeSync_getLocalizationInfo( void )
+{
+    return &m_timeSync_localizationInfo;
 }
 
 /************************************************************************************
@@ -387,6 +397,9 @@ static bool getNtpTime( tTimeSync_serverType serverType, uint32_t *timestamp )
             return false;
         }
 
+        // Parse response. Extract Transmit Timestamp field: 40-47 byte
+        // The first 32 bits are the number of seconds since January 1, 1900 (NTP epoch)
+        // The next 32 bits are fractions of a second.
         *timestamp = ( ntp_packet[40] << 24 ) | ( ntp_packet[41] << 16 ) | ( ntp_packet[42] << 8 ) | ntp_packet[43];
         *timestamp -= UNIX_OFFSET;  // Convert NTP time to UNIX time
 

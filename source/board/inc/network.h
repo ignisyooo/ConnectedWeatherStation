@@ -28,6 +28,7 @@ typedef void ( *tNetwork_statusCallback )( void );
 void network_init( tNetwork_statusCallback dhcp_callback );
 bool network_isLinkUp( void );
 void network_startDhcp( void );
+void network_stopDhcp( void );
 bool network_getIpv4Address( ip4_addr_t *pAddr );
 
 #ifdef __cplusplus

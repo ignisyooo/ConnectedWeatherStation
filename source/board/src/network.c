@@ -89,6 +89,11 @@ void network_startDhcp( void )
     dhcp_start( &gnetif );
 }
 
+void network_stopDhcp( void )
+{
+    dhcp_stop( &gnetif );
+}
+
 bool network_isLinkUp( void )
 {
     return netif_is_link_up( &gnetif );

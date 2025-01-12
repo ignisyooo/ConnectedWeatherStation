@@ -1,5 +1,6 @@
 #include "clock.h"
 #include "cmsis_os.h"
+#include "displayController.h"
 #include "dns_resolver.h"
 #include "error.h"
 #include "gpio.h"
@@ -8,9 +9,10 @@
 #include "logger.h"
 #include "mqttClient.h"
 #include "network.h"
-#include "rtc.h"
-#include "usart.h"
 #include "networkMgr.h"
+#include "rtc.h"
+#include "spi.h"
+#include "usart.h"
 
 static void StartDefaultTask( void* argument );
 static void userMqttDisconnectCallback( void );
@@ -26,6 +28,9 @@ int main( void )
     MX_GPIO_Init();
     MX_USART3_UART_Init();
     RTC_Init();
+    DMA_Init();
+    SPI1_Init();
+
     osKernelInitialize();
 
     logger_init( &huart3 );
@@ -51,6 +56,7 @@ int main( void )
 
 static void StartDefaultTask( void* argument )
 {
+    displayController_init();
     networkMgr_init();
 
     logger_setLogLevel( LOG_LEVEL_DEBUG );
@@ -82,15 +88,10 @@ static void StartDefaultTask( void* argument )
         HAL_GPIO_TogglePin( LED_BLUE_GPIO_Port, LED_BLUE_Pin );
         osDelay( 1000 );
 
-        HAL_RTC_GetTime( &hrtc, &time, RTC_FORMAT_BIN );
-        HAL_RTC_GetDate( &hrtc, &date, RTC_FORMAT_BIN );
-
         // if( connected )
         // {
         //     // mqttClient_sendMessage( "test", "Hello from st" );
         // }
-
-        LOG_INFO( "Current time: %02d:%02d:%02d", time.Hours, time.Minutes, time.Seconds );
     }
 }
 
