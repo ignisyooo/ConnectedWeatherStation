@@ -451,7 +451,11 @@ static int32_t getTimezoneOffset( const char *timezoneName, const struct tm *tim
 static void syncRtcWithTime( uint32_t ntpTimestamp )
 {
     struct tm timeinfo;
-    uint32_t localTime = ntpTimestamp + getTimezoneOffset( m_timeSync_localizationInfo.timezone, &timeinfo );
+    gmtime_r( (time_t *)&ntpTimestamp, &timeinfo );
+
+    int32_t timezoneOffset = getTimezoneOffset( m_timeSync_localizationInfo.timezone, &timeinfo );
+
+    uint32_t localTime = ntpTimestamp + timezoneOffset;
 
     gmtime_r( (time_t *)&localTime, &timeinfo );
 
