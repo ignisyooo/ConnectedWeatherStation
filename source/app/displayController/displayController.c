@@ -37,7 +37,7 @@ void displayController_init( void )
 
         const osThreadAttr_t attributes = {
             .name = "displayControllerTask",
-            .stack_size = 1024,
+            .stack_size = 2048,
             .priority = (osPriority_t)osPriorityNormal,
         };
         osThreadNew( displayControllerTask, NULL, &attributes );
@@ -53,7 +53,6 @@ void displayControllerTask( void *args )
     lvglWrapper_displayInit();
 
     lvglWrapper_createClockScreen();
-
     while( 1 )
     {
         updateClockScreen();

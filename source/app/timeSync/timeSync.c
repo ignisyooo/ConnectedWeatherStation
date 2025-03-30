@@ -6,13 +6,13 @@
 
 #include "FreeRTOS.h"
 #include "cJSON.h"
+#include "cmsis_os.h"
 #include "dns_resolver.h"
 #include "error.h"
 #include "httpClient.h"
 #include "httpSessionMgr.h"
 #include "logger.h"
 #include "lwip/sockets.h"
-#include "task.h"
 
 /************************************************************************************
  * PRIVATE MACROS
@@ -49,9 +49,20 @@ typedef enum
 
 typedef struct
 {
-    const char *name;    // TimeZone name
-    int32_t utc_offset;  // Offset from UTC in seconds (e.g. +3600 for UTC+1)
-    int32_t dst_offset;  // Additional summer time offset (in seconds), e.g. +3600
+    uint8_t start_month;  // Month when DST starts (1 = January, 12 = December)
+    uint8_t start_week;   // Week of the month when DST starts (1 = first week, 5 = last week)
+    uint8_t start_wday;   // Day of the week when DST starts (0 = Sunday, 6 = Saturday)
+    uint8_t end_month;    // Month when DST ends
+    uint8_t end_week;     // Week of the month when DST ends
+    uint8_t end_wday;     // Day of the week when DST ends
+    int32_t offset;       // Additional offset in seconds for DST (e.g., +3600)
+} tDstInfo;
+
+typedef struct
+{
+    const char *name;    // Timezone name
+    int32_t utc_offset;  // Offset from UTC in seconds (e.g., +3600 for UTC+1)
+    tDstInfo dst_info;   // DST information
 } tTimeZoneInfo;
 
 /************************************************************************************
@@ -63,7 +74,8 @@ static void timeZoneHttpResponseCallback( const char *data, size_t dataSize );
 static void timeZoneHttpErrorCallback( uint32_t errorCode );
 static bool getNtpTime( tTimeSync_serverType serverType, uint32_t *timestamp );
 static void syncRtcWithTime( uint32_t ntpTimestamp );
-static int32_t getTimezoneOffset( const char *timezoneName );
+static int32_t getTimezoneOffset( const char *timezoneName, const struct tm *timeinfo );
+static bool isDstActive( const tTimeZoneInfo *timezone, const struct tm *timeinfo );
 
 /************************************************************************************
  * PRIVATE VARIABLES DECLERATION
@@ -76,18 +88,18 @@ static const char *m_timeSync_timeServer[] = {
 };
 
 static const tTimeZoneInfo m_timeSync_timezones[] = {
-    { "UTC", 0, 0 },                          // UTC (zero offset, brak DST)
-    { "Europe/Lisbon", 0, 3600 },             // Portugal (UTC+0, DST: UTC+1)
-    { "Europe/Warsaw", 3600, 3600 },          // Poland (UTC+1, DST: UTC+2)
-    { "America/New_York", -18000, 3600 },     // New York (UTC-5, DST: UTC-4)
-    { "America/Los_Angeles", -28800, 3600 },  // Los Angeles (UTC-8, DST: UTC-7)
-    { "Asia/Tokyo", 32400, 0 },               // Tokyo (UTC+9, brak DST)
-    { "Europe/London", 0, 3600 },             // London (UTC+0, DST: UTC+1)
-    { "Australia/Sydney", 39600, 3600 },      // Sydney (UTC+10, DST: UTC+11)
-    { "Asia/Kolkata", 19800, 0 },             // India (UTC+5:30, brak DST)
-    { "Africa/Johannesburg", 7200, 0 },       // Johannesburg (UTC+2, brak DST)
-    { "America/Sao_Paulo", -10800, 3600 },    // Sao Paulo (UTC-3, DST: UTC-2)
-    { "Asia/Shanghai", 28800, 0 }             // Shanghai (UTC+8, brak DST)
+    { "UTC", 0, { 0, 0, 0, 0, 0, 0, 0 } },                           // UTC (no DST)
+    { "Europe/Lisbon", 0, { 3, 5, 0, 10, 5, 0, 3600 } },             // Portugal (UTC+0, DST: UTC+1)
+    { "Europe/Warsaw", 3600, { 3, 5, 0, 10, 5, 0, 3600 } },          // Poland (UTC+1, DST: UTC+2)
+    { "America/New_York", -18000, { 3, 2, 0, 11, 1, 0, 3600 } },     // New York (UTC-5, DST: UTC-4)
+    { "America/Los_Angeles", -28800, { 3, 2, 0, 11, 1, 0, 3600 } },  // Los Angeles (UTC-8, DST: UTC-7)
+    { "Asia/Tokyo", 32400, { 0, 0, 0, 0, 0, 0, 0 } },                // Tokyo (UTC+9, no DST)
+    { "Europe/London", 0, { 3, 5, 0, 10, 5, 0, 3600 } },             // London (UTC+0, DST: UTC+1)
+    { "Australia/Sydney", 39600, { 10, 1, 0, 4, 1, 0, 3600 } },      // Sydney (UTC+10, DST: UTC+11)
+    { "Asia/Kolkata", 19800, { 0, 0, 0, 0, 0, 0, 0 } },              // India (UTC+5:30, no DST)
+    { "Africa/Johannesburg", 7200, { 0, 0, 0, 0, 0, 0, 0 } },        // Johannesburg (UTC+2, no DST)
+    { "America/Sao_Paulo", -10800, { 2, 3, 0, 11, 1, 0, 3600 } },    // Sao Paulo (UTC-3, DST: UTC-2)
+    { "Asia/Shanghai", 28800, { 0, 0, 0, 0, 0, 0, 0 } }              // Shanghai (UTC+8, no DST)
 };
 
 // TODO: Handle DST time
@@ -109,11 +121,16 @@ void timeSync_init( void )
     if( !m_timeSync_initalized )
     {
         m_timeSync_initalized = true;
-        xTaskCreate( timeSyncTask, "TimeSync", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 1, NULL );
+        const osThreadAttr_t attributes = {
+            .name = "TimeSyncTask",
+            .stack_size = 2048,
+            .priority = (osPriority_t)osPriorityNormal,
+        };
+        osThreadNew( timeSyncTask, NULL, &attributes );
     }
 }
 
-const tTimeSync_localizationInfo* timeSync_getLocalizationInfo( void )
+const tTimeSync_localizationInfo *timeSync_getLocalizationInfo( void )
 {
     return &m_timeSync_localizationInfo;
 }
@@ -414,13 +431,18 @@ static bool getNtpTime( tTimeSync_serverType serverType, uint32_t *timestamp )
     }
 }
 
-static int32_t getTimezoneOffset( const char *timezoneName )
+static int32_t getTimezoneOffset( const char *timezoneName, const struct tm *timeinfo )
 {
     for( size_t i = 0; i < sizeof( m_timeSync_timezones ) / sizeof( m_timeSync_timezones[0] ); i++ )
     {
         if( strcmp( m_timeSync_timezones[i].name, timezoneName ) == 0 )
         {
-            return m_timeSync_timezones[i].utc_offset;
+            int32_t offset = m_timeSync_timezones[i].utc_offset;
+            if( isDstActive( &m_timeSync_timezones[i], timeinfo ) )
+            {
+                offset += m_timeSync_timezones[i].dst_info.offset;
+            }
+            return offset;
         }
     }
     return 0;
@@ -429,7 +451,7 @@ static int32_t getTimezoneOffset( const char *timezoneName )
 static void syncRtcWithTime( uint32_t ntpTimestamp )
 {
     struct tm timeinfo;
-    uint32_t localTime = ntpTimestamp + getTimezoneOffset( m_timeSync_localizationInfo.timezone );
+    uint32_t localTime = ntpTimestamp + getTimezoneOffset( m_timeSync_localizationInfo.timezone, &timeinfo );
 
     gmtime_r( (time_t *)&localTime, &timeinfo );
 
@@ -465,4 +487,43 @@ static void syncRtcWithTime( uint32_t ntpTimestamp )
     LOG_INFO( "RTC synchronized to local time: %02d-%02d-%04d %02d:%02d:%02d\n",
               rtc_date.Date, rtc_date.Month, rtc_date.Year + 2000,
               rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds );
+}
+
+static bool isDstActive( const tTimeZoneInfo *timezone, const struct tm *timeinfo )
+{
+    const tDstInfo *dst = &timezone->dst_info;
+
+    if( dst->offset == 0 )
+    {
+        return false;
+    }
+
+    struct tm start = { .tm_year = timeinfo->tm_year, .tm_mon = dst->start_month - 1, .tm_mday = 1, .tm_hour = 2 };
+    mktime( &start );
+    while( start.tm_wday != dst->start_wday )
+    {
+        start.tm_mday++;
+        mktime( &start );
+    }
+    if( dst->start_week < 5 )
+    {
+        start.tm_mday += ( dst->start_week - 1 ) * 7;
+        mktime( &start );
+    }
+
+    struct tm end = { .tm_year = timeinfo->tm_year, .tm_mon = dst->end_month - 1, .tm_mday = 1, .tm_hour = 2 };
+    mktime( &end );
+    while( end.tm_wday != dst->end_wday )
+    {
+        end.tm_mday++;
+        mktime( &end );
+    }
+    if( dst->end_week < 5 )
+    {
+        end.tm_mday += ( dst->end_week - 1 ) * 7;
+        mktime( &end );
+    }
+
+    time_t current = mktime( (struct tm *)timeinfo );
+    return ( current >= mktime( &start ) && current < mktime( &end ) );
 }

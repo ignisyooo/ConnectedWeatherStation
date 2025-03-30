@@ -13,6 +13,8 @@
 #include "rtc.h"
 #include "spi.h"
 #include "usart.h"
+#include "sen55.h"
+#include "i2c.h"
 
 static void StartDefaultTask( void* argument );
 static void userMqttDisconnectCallback( void );
@@ -30,6 +32,7 @@ int main( void )
     RTC_Init();
     DMA_Init();
     SPI1_Init();
+    I2C1_Init();
 
     osKernelInitialize();
 
@@ -58,53 +61,15 @@ static void StartDefaultTask( void* argument )
 {
     displayController_init();
     networkMgr_init();
+    sen55_init();
 
     logger_setLogLevel( LOG_LEVEL_DEBUG );
 
-    const tMqttClient_brokerInfo info = {
-        .brokerAddres = "broker.hivemq.com",
-        .brokerPort = 1883
-    };
-
-    const char* mqttClientId = "st-client";
-    const char* mqttTopicName = "st/command";
-
-    RTC_TimeTypeDef time = { 0 };
-    RTC_DateTypeDef date = { 0 };
-
     while( 1 )
     {
-        // if( !connected && networkMgr_isReady() )
-        // {
-        //     mqttClient_clientCreate( mqttClientId, &info, mqttTopicName );
-        //     mqttClient_registerCallbacks( userMqttDataCallback, userMqttDisconnectCallback );
-        //     if( CONNECTION_ACCEPTED == mqttClient_connect() )
-        //     {
-        //         LOG_INFO( "Client connected!" );
-        //         connected = true;
-        //     }
-        // }
-
         HAL_GPIO_TogglePin( LED_BLUE_GPIO_Port, LED_BLUE_Pin );
         osDelay( 1000 );
-
-        // if( connected )
-        // {
-        //     // mqttClient_sendMessage( "test", "Hello from st" );
-        // }
     }
-}
-
-static void userMqttDisconnectCallback( void )
-{
-    LOG_INFO( "Client disconnected from broker" );
-
-    connected = false;
-}
-
-static void userMqttDataCallback( const char* topic, const char* payload, size_t payloadLength )
-{
-    LOG_INFO( "Received on topic: %s, payload: %s", topic, payload );
 }
 
 /* FREERTOS HOOKS */

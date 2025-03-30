@@ -1,109 +1,84 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file    stm32f7xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-
-/* Includes ------------------------------------------------------------------*/
-#include "usart.h"
 #include "stm32f7xx_it.h"
+
+#include "usart.h"
 
 extern ETH_HandleTypeDef heth;
 extern TIM_HandleTypeDef htim6;
 extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_spi1_tx;
 extern SPI_HandleTypeDef hspi1;
+extern I2C_HandleTypeDef hi2c1;
 
-
-void NMI_Handler(void)
+void NMI_Handler( void )
 {
-
-  while (1)
-  {
-  }
+    while( 1 )
+    {
+    }
 }
 
-
-void HardFault_Handler(void)
+void HardFault_Handler( void )
 {
-
-  while (1)
-  {
-  }
+    while( 1 )
+    {
+    }
 }
 
-void MemManage_Handler(void)
+void MemManage_Handler( void )
 {
-
-  while (1)
-  {
-  }
+    while( 1 )
+    {
+    }
 }
 
-
-void BusFault_Handler(void)
+void BusFault_Handler( void )
 {
-
-  while (1)
-  {
-
-  }
+    while( 1 )
+    {
+    }
 }
 
-
-void UsageFault_Handler(void)
+void UsageFault_Handler( void )
 {
-
-  while (1)
-  {
-  }
+    while( 1 )
+    {
+    }
 }
 
-void DebugMon_Handler(void)
+void DebugMon_Handler( void )
 {
-
 }
 
-
-void TIM6_DAC_IRQHandler(void)
+void TIM6_DAC_IRQHandler( void )
 {
-
-  HAL_TIM_IRQHandler(&htim6);
-
+    HAL_TIM_IRQHandler( &htim6 );
 }
 
-void ETH_IRQHandler(void)
+void ETH_IRQHandler( void )
 {
-  HAL_ETH_IRQHandler(&heth);
+    HAL_ETH_IRQHandler( &heth );
 }
 
-
-void USART3_IRQHandler(void)
+void USART3_IRQHandler( void )
 {
-  HAL_UART_IRQHandler(&huart3);
+    HAL_UART_IRQHandler( &huart3 );
 }
 
-void SPI1_IRQHandler(void)
+void SPI1_IRQHandler( void )
 {
-  HAL_SPI_IRQHandler(&hspi1);
+    HAL_SPI_IRQHandler( &hspi1 );
 }
 
-void DMA2_Stream3_IRQHandler(void)
+void DMA2_Stream3_IRQHandler( void )
 {
-  HAL_DMA_IRQHandler(&hdma_spi1_tx);
+    HAL_DMA_IRQHandler( &hdma_spi1_tx );
 }
 
+void I2C1_EV_IRQHandler( void )
+{
+    HAL_I2C_EV_IRQHandler( &hi2c1 );
+}
+
+void I2C1_ER_IRQHandler( void )
+{
+    HAL_I2C_ER_IRQHandler( &hi2c1 );
+}

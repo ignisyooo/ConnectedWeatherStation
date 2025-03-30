@@ -51,6 +51,8 @@ void networkMgr_init( void )
             .priority = (osPriority_t)osPriorityNormal,
         };
 
+        m_networkMgr_initalized = true;
+
         osThreadNew( networkMgrTask, NULL, &attributes );
     }
 }
