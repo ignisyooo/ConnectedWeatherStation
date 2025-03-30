@@ -450,13 +450,13 @@ static int32_t getTimezoneOffset( const char *timezoneName, const struct tm *tim
 
 static void syncRtcWithTime( uint32_t ntpTimestamp )
 {
-    struct tm timeinfo;
+    struct tm timeinfo = { 0 };
     gmtime_r( (time_t *)&ntpTimestamp, &timeinfo );
 
     int32_t timezoneOffset = getTimezoneOffset( m_timeSync_localizationInfo.timezone, &timeinfo );
 
     uint32_t localTime = ntpTimestamp + timezoneOffset;
-
+    memset( &timeinfo, 0, sizeof( timeinfo ) );
     gmtime_r( (time_t *)&localTime, &timeinfo );
 
     RTC_TimeTypeDef rtc_time;
@@ -478,9 +478,9 @@ static void syncRtcWithTime( uint32_t ntpTimestamp )
 
     // Set RTC date
     rtc_date.WeekDay = timeinfo.tm_wday + 1;  // RTC expects value from 1 to 7 (Monday=1)
-    rtc_date.Month = timeinfo.tm_mon + 1;     // RTC expects value from 11 to 13 (Januaray=1)
+    rtc_date.Month = timeinfo.tm_mon + 1;     // RTC expects value from 1 to 12 (January=1)
     rtc_date.Date = timeinfo.tm_mday;
-    rtc_date.Year = timeinfo.tm_year - 100;  // RTC expects valye from 0 to 99
+    rtc_date.Year = timeinfo.tm_year - 100;  // RTC expects value from 0 to 99
 
     if( HAL_RTC_SetDate( &hrtc, &rtc_date, RTC_FORMAT_BIN ) != HAL_OK )
     {
